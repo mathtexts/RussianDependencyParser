@@ -1,0 +1,13 @@
+1	Мама	МАМА	NOUN	NOUN	anim|femn|sing|nomn	0	punct	_	_
+2	Александра	АЛЕКСАНДРА	NOUN	NOUN	anim|femn|Name|sing|nomn	0	punct	_	_
+3	Овечкина	ОВЕЧКИНА	NOUN	NOUN	anim|femn|Sgtm|Surn|sing|nomn	0	punct	_	_
+4	двукратная	двукратная	NOUN	NOUN	anim|masc|Name|sing|gent	0	punct	_	_
+5	олимпийская	ОЛИМПИЙСКИЙ	ADJF	ADJF	femn|sing|nomn	0	punct	_	_
+6	чемпионка	ЧЕМПИОНКА	NOUN	NOUN	anim|femn|sing|nomn	0	punct	_	_
+7	и	И	PRCL	PRCL	_	0	punct	_	_
+8	великий	ВЕЛИКИЙ	ADJF	ADJF	inan|masc|sing|accs	0	punct	_	_
+9	баскетбольный	БАСКЕТБОЛЬНЫЙ	ADJF	ADJF	inan|masc|sing|accs	0	punct	_	_
+10	тренер	ТРЕНЕР	NOUN	NOUN	anim|masc|sing|nomn	0	punct	_	_
+11	Татьяна	ТАТЬЯНА	NOUN	NOUN	anim|femn|Name|sing|nomn	0	punct	_	_
+12	Овечкина	ОВЕЧКИНА	NOUN	NOUN	anim|femn|Sgtm|Surn|sing|nomn	0	punct	_	_
+13	.	.	PNCT	PNCT	_	0	punct	_	_

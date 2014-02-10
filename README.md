@@ -1,7 +1,7 @@
 RussianDependencyParser
 =======================
 
-Morphological disambiguation (C++) + dependency parser of Russian by Alexey Gorelov, supervised by Dr Mstislav Maslennikov
+Morphological disambiguation (C++) and dependency parser of Russian by Alexey Gorelov, supervised by Dr Mstislav Maslennikov
 
 This is a project for the "Mathematical methods for text analysis" course in autumn 2013 in MSU. 
 

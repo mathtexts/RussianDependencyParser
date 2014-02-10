@@ -28,4 +28,4 @@ License
    http://www.eclipse.org/legal/epl-v10.html
   
    Contributors:
-       Alexey Gorelov, Mstislav Maslennikov
+       Alexey Gorelov, Elena Sokolova (dependency corpus extension), Mstislav Maslennikov

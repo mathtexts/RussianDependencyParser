@@ -11,8 +11,7 @@
 
 QTextStream err(stdout);
 
-Model::Model(const QString &hashTableFilename, QTextStream &out)
-{
+Model::Model(const QString& hashTableFilename, QTextStream& out) {
     countTagsPair.clear();
     dict.clear();
     endsAndTags.clear();
@@ -24,7 +23,7 @@ Model::Model(const QString &hashTableFilename, QTextStream &out)
     }
     QByteArray rawInput = fin.readAll();
     rawInput = qUncompress(rawInput);
-    
+
 
     QTextStream htFile(rawInput, QIODevice::ReadOnly);
     htFile.setCodec("CP1251");
@@ -66,8 +65,7 @@ Model::Model(const QString &hashTableFilename, QTextStream &out)
 }
 
 bool
-Model::save(const QString &filename, QTextStream &out)
-{
+Model::save(const QString& filename, QTextStream& out) {
     QFile fout(filename);
     if (!fout.open(QIODevice::WriteOnly | QIODevice::Text)) {
         out << "ERROR: cannot open model file" << endl;
@@ -86,8 +84,7 @@ Model::save(const QString &filename, QTextStream &out)
 }
 
 bool
-Model::load(const QString &filename, QTextStream &out)
-{
+Model::load(const QString& filename, QTextStream& out) {
     QFile fin(filename);
     if (!fin.open(QIODevice::ReadOnly | QIODevice::Text)) {
         out << "ERROR: model file not found" << endl;
@@ -112,8 +109,7 @@ Model::load(const QString &filename, QTextStream &out)
 }
 
 bool
-Model::train(const QString &filename, QTextStream &out)
-{
+Model::train(const QString& filename, QTextStream& out) {
     QFile fin(filename);
 
     if (!fin.open(QIODevice::ReadOnly | QIODevice::Text)) {
@@ -126,8 +122,7 @@ Model::train(const QString &filename, QTextStream &out)
     QTextStream sfin(&fin);
     sfin.setCodec("UTF-8");
     out.setCodec("UTF-8");
-    while (!sfin.atEnd())
-    {
+    while (!sfin.atEnd()) {
         QString line = sfin.readLine();
         if (line == "----------") {
             prevTag = "NONE";
@@ -143,8 +138,7 @@ Model::train(const QString &filename, QTextStream &out)
 }
 
 double
-Model::test(const QString &filename, QTextStream &out)
-{
+Model::test(const QString& filename, QTextStream& out) {
     QFile fin(filename);
 
     if (!fin.open(QIODevice::ReadOnly | QIODevice::Text)) {
@@ -158,8 +152,7 @@ Model::test(const QString &filename, QTextStream &out)
     QTextStream sfin(&fin);
     sfin.setCodec("UTF-8");
     out.setCodec("UTF-8");
-    while (!sfin.atEnd())
-    {
+    while (!sfin.atEnd()) {
         QString line = sfin.readLine();
         if (line == "----------") {
             prevTag = "NONE";
@@ -171,7 +164,7 @@ Model::test(const QString &filename, QTextStream &out)
         if (curTag != "PNKT" && curTag != "NUMB" && curTag != "LATN" && curTag != "UNKN") {
             if (words[2] == "UNKN")
                 continue;
-            ++countAll; 
+            ++countAll;
             if (words[2] != "UNKN" && words[2] != curTag) {
                 out << words[0] << " : " << words[2] << " != " << curTag << endl;
                 ++countWrong;
@@ -179,13 +172,12 @@ Model::test(const QString &filename, QTextStream &out)
         }
         prevTag = curTag;
     }
-    out << (countAll - countWrong) /  (1. * countAll) << endl;
+    out << (countAll - countWrong) / (1. * countAll) << endl;
     return true;
 }
 
 void
-Model::print(QTextStream &out)
-{
+Model::print(QTextStream& out) {
     out.setCodec("UTF-8");
     QHash<StringPair, ulong>::const_iterator i;
     QHash<QString, ulong> count;
@@ -201,32 +193,30 @@ Model::print(QTextStream &out)
 }
 
 StringPair
-Model::predict(const QString &prevTag, const QString &curWord)
-{
+Model::predict(const QString& prevTag, const QString& curWord) {
     QList<ulong> probs;
     QList<StringPair> variants = getTags(curWord, probs);
-    uint maxVariant = 0; 
-    if (variants[maxVariant].second == "PNKT" || variants[maxVariant].second == "NUMB" || 
-        variants[maxVariant].second == "LATN" || variants[maxVariant].second == "UNKN") {
+    uint maxVariant = 0;
+    if (variants[maxVariant].second == "PNKT" || variants[maxVariant].second == "NUMB" ||
+            variants[maxVariant].second == "LATN" || variants[maxVariant].second == "UNKN") {
         return variants[maxVariant];
     }
     Q_ASSERT(probs.size() == variants.size());
     for (int i = 0; i < variants.size(); ++i) {
-        if (probs[i]*countTagsPair[StringPair(prevTag, variants[i].second)] > probs[maxVariant]*countTagsPair[StringPair(prevTag, variants[maxVariant].second)]) {
+        if (probs[i] * countTagsPair[StringPair(prevTag, variants[i].second)] > probs[maxVariant] * countTagsPair[StringPair(prevTag, variants[maxVariant].second)]) {
             maxVariant = i;
         }
     }
     return variants[maxVariant];
-} 
+}
 
 QList<StringPair>
-Model::getTags(const QString &word, QList<ulong> &probs)
-{
+Model::getTags(const QString& word, QList<ulong>& probs) {
     err.setCodec("UTF-8");
     QList<StringPair> result;
     result.clear();
     probs.clear();
-    QChar yo = QString::fromUtf8("Ё")[0];                                   
+    QChar yo = QString::fromUtf8("Ё")[0];
     QChar ye = QString::fromUtf8("Е")[0];
     result = dict.values(word.toUpper().replace(yo, ye, Qt::CaseInsensitive));
     if (result.size() > 0) {

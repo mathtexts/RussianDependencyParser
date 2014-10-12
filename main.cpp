@@ -8,17 +8,17 @@
 #include <QDir>
 #include <QApplication>
 
-bool 
-printMorph(const QString &f1, const QString &f2, Model &m, QTextStream &out)
-{
+static char const* const MORPH_HASH_FILE = "hash.bin";
+
+bool
+printMorph(const QString& f1, const QString& f2, Model& m, QTextStream& out) {
     QFile xmlInput(f1);
     QFile outFile(f2);
     int j = 1;
     int s = 0;
     bool fSnt = true;
 
-    if (!xmlInput.open(QIODevice::ReadOnly | QIODevice::Text))
-    {
+    if (!xmlInput.open(QIODevice::ReadOnly | QIODevice::Text)) {
         out << "Can't open input file";
         return false;
     }
@@ -41,7 +41,11 @@ printMorph(const QString &f1, const QString &f2, Model &m, QTextStream &out)
             if (xmlReader.name() == "se") {
                 j = 1;
                 ++s;
-                if (!fSnt) { outF << endl;} else { fSnt = false; }
+                if (!fSnt) {
+                    outF << endl;
+                } else {
+                    fSnt = false;
+                }
                 prevTag = "NONE";
                 id = "0";
             }
@@ -77,14 +81,14 @@ printMorph(const QString &f1, const QString &f2, Model &m, QTextStream &out)
                 }
                 if (idHead.size() == 0) idHead = "0";
                 if (type.size() == 0) type = "punct";
-                outF << id << "\t" 
-                    << word << "\t" 
-                    << predicted.first << "\t" 
-                    << Pos << "\t" 
-                    << Pos << "\t" 
-                    << tags << "\t" 
-                    << idHead << "\t" 
-                    << type << "\t" << "_" << "\t" << "_" << endl;
+                outF << id << "\t"
+                        << word << "\t"
+                        << predicted.first << "\t"
+                        << Pos << "\t"
+                        << Pos << "\t"
+                        << tags << "\t"
+                        << idHead << "\t"
+                        << type << "\t" << "_" << "\t" << "_" << endl;
                 ++j;
             }
         }
@@ -95,8 +99,7 @@ printMorph(const QString &f1, const QString &f2, Model &m, QTextStream &out)
 }
 
 void
-printHelp()
-{
+printHelp() {
     QTextStream out(stdout);
     out << "Use:\n";
     out << "\t--morphtrain train.txt newMorphModel.txt\n";
@@ -106,8 +109,7 @@ printHelp()
 }
 
 int
-main(int argc, char *argv[])
-{   
+main(int argc, char* argv[]) {
     QApplication app(argc, argv);
     QDir dir = QDir::current();//(QCoreApplication::applicationDirPath());
     QTextStream out(stderr);
@@ -121,7 +123,7 @@ main(int argc, char *argv[])
             printHelp();
             return 0;
         }
-        Model m("hash.txt", out);
+        Model m(MORPH_HASH_FILE, out);
         m.train(argv[2], out);
         m.save(argv[3], out);
         return 0;
@@ -130,7 +132,7 @@ main(int argc, char *argv[])
             printHelp();
             return 0;
         }
-        Model m("hash.txt", out);
+        Model m(MORPH_HASH_FILE, out);
         m.load(argv[4], out);
         if (!printMorph(argv[2], argv[3], m, out)) return -1;
     } else if (QString(argv[1]) == "--synttrain") {
@@ -138,13 +140,13 @@ main(int argc, char *argv[])
             printHelp();
             return 0;
         }
-        Model m("hash.txt", out);
+        Model m(MORPH_HASH_FILE, out);
         m.load(argv[3], out);
         if (!printMorph(argv[2], "tmpFile", m, out)) return -1;
         QProcess turboParser;
         turboParser.setProcessChannelMode(QProcess::MergedChannels);
-        turboParser.start(argv[5], 
-                          QStringList() << "--train" << "--file_train="+dir.absoluteFilePath("tmpFile") << "--file_model="+dir.absoluteFilePath(argv[4]));
+        turboParser.start(argv[5],
+                QStringList() << "--train" << "--file_train=" + dir.absoluteFilePath("tmpFile") << "--file_model=" + dir.absoluteFilePath(argv[4]));
         turboParser.waitForFinished(-1);
         QFile::remove("tmpFile");
     } else if (QString(argv[1]) == "--syntmark") {
@@ -152,17 +154,17 @@ main(int argc, char *argv[])
             printHelp();
             return 0;
         }
-	out << "Loading model" << endl;
-        Model m("hash.txt", out);
+        out << "Loading model" << endl;
+        Model m(MORPH_HASH_FILE, out);
         m.load(argv[3], out);
-	out << "Generating tmp file" << endl;
+        out << "Generating tmp file" << endl;
         if (!printMorph(argv[2], "tmpFile", m, out)) return -1;
-	out << "Running TurboParser" << endl;        
-	QProcess turboParser;
+        out << "Running TurboParser" << endl;
+        QProcess turboParser;
         turboParser.setProcessChannelMode(QProcess::MergedChannels);
-        turboParser.start(argv[6], 
-                          QStringList() << "--test" << "--evaluate" << "--file_test="+dir.absoluteFilePath("tmpFile") 
-                          << "--file_model="+dir.absoluteFilePath(argv[4]) << "--file_prediction="+dir.absoluteFilePath(argv[5]));
+        turboParser.start(argv[6],
+                QStringList() << "--test" << "--evaluate" << "--file_test=" + dir.absoluteFilePath("tmpFile")
+                        << "--file_model=" + dir.absoluteFilePath(argv[4]) << "--file_prediction=" + dir.absoluteFilePath(argv[5]));
         turboParser.waitForFinished(-1);
         QFile::remove("tmpFile");
     } else {

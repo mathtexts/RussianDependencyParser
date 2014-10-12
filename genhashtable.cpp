@@ -45,9 +45,17 @@ main(int argc, char *argv[])
     while (!line.isNull()) {
         lineParts = line.split(QRegExp("[\t ]"), QString::SkipEmptyParts);
         if (isfirst) {
-            normalForm = lineParts[0];
+            if (!(lineParts.size() < 2 || lineParts[1].startsWith("VERB,") || lineParts[1].startsWith("PRTF,")
+                    || lineParts[1].startsWith("PRTS,") || lineParts[1].startsWith("GRND,"))) {
+                normalForm = lineParts[0];
+            }
             isfirst = false;
         }
+
+        if (lineParts.size() > 2 && lineParts[1].startsWith("INFN,")) {
+            normalForm = lineParts[0];
+        }
+
         if (lineParts.size() < 1) {
             line = sfin.readLine();
             continue;
@@ -103,12 +111,12 @@ main(int argc, char *argv[])
     result += "\n----------";
 
 
-    QFile hashT(argv[2]);
-    hashT.open(QIODevice::WriteOnly);
+    QFile hashFile(argv[2]);
+    hashFile.open(QIODevice::WriteOnly);
     QTextCodec *cp1251 = QTextCodec::codecForName("CP1251");
-    hashT.write(qCompress(cp1251->fromUnicode(result)));
-    hashT.flush();
-    hashT.close();
+    hashFile.write(qCompress(cp1251->fromUnicode(result)));
+    hashFile.flush();
+    hashFile.close();
 
     return 0;
 }

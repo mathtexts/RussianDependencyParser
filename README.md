@@ -14,6 +14,20 @@ Kindly refer to:
 Compulsory citation:
 Alexey Gorelov and Mstislav Maslennikov, 2014. "Syntactic analysis of texts". In "Mathematical methods for text analysis" speckours, vk.com/mathtexts.
 
+Installation
+============
+
+(1) Install TurboParser from the page http://www.ark.cs.cmu.edu/TurboParser/ into some directory,
+for example ~/install/TurboParser
+
+(2) Update the file launch.sh with ~/install/TurboParser
+
+(3) Check some libraries, that are necessary to run TurboParser. You can copy them as follows:
+$ sudo cp ~/install/TurboParser/deps/local/lib/libgflags.so.2 /usr/lib/libgflags.so.2
+$ sudo cp ~/install/TurboParser/deps/local/lib/libglog.so.0 /usr/lib/libglog.so.0
+
+(4) Setup your own configuration of launch.sh and run it. In the first time, you would need to train
+the syntactic parser. In the following runs, you will only need to apply it.
 
 License
 =======

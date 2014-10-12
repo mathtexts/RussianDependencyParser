@@ -1,19 +1,16 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <sentences><p>
 <se>
-<w id="1">Мама<rel id_head="" type=""/></w>
-<w id="2">Александра<rel id_head="" type=""/></w>
-<w id="3">Овечкина<rel id_head="" type=""/></w>
-<w id="4">двукратная<rel id_head="" type=""/></w>
-<w id="5">олимпийская<rel id_head="" type=""/></w>
-<w id="6">чемпионка<rel id_head="" type=""/></w>
-<w id="7">и<rel id_head="" type=""/></w>
-<w id="8">великий<rel id_head="" type=""/></w>
-<w id="9">баскетбольный<rel id_head="" type=""/></w>
-<w id="10">тренер<rel id_head="" type=""/></w>
-<w id="11">Татьяна<rel id_head="" type=""/></w>
-<w id="12">Овечкина<rel id_head="" type=""/></w>
-<w id="13">.<rel id_head="" type=""/></w>
+<w id="1"><rel id_head="" type=""/></w>
+<w id="2">Казанцев<rel id_head="" type=""/></w>
+<w id="3">стала<rel id_head="" type=""/></w>
+<w id="4">третьей<rel id_head="" type=""/></w>
+<w id="5">подряд<rel id_head="" type=""/></w>
+<w id="6">представительницей<rel id_head="" type=""/></w>
+<w id="7">Нью-Йорка,<rel id_head="" type=""/></w>
+<w id="8">завоевавшей<rel id_head="" type=""/></w>
+<w id="9">престижный<rel id_head="" type=""/></w>
+<w id="10">титул.<rel id_head="" type=""/></w>
 </se>
 </p>
 </sentences>

@@ -19,18 +19,19 @@ Installation
 ============
 
 (1) Install TurboParser from the page http://www.ark.cs.cmu.edu/TurboParser/ into some directory,
-for example ~/install/TurboParser;
+    for example ~/install/TurboParser;
 
 (2) Download the plain text dictionary from opencorpora.org/dict.php, eg into the file ../openCorpora/dict.opcorpora.txt;
 
 (2) Update the file launch.sh with ~/install/TurboParser and ../openCorpora/ folder locations;
 
 (3) Check some libraries, that are necessary to run TurboParser. You can copy them as follows:
-$ sudo cp ~/install/TurboParser/deps/local/lib/libgflags.so.2 /usr/lib/libgflags.so.2
-$ sudo cp ~/install/TurboParser/deps/local/lib/libglog.so.0 /usr/lib/libglog.so.0
+    $ sudo cp ~/install/TurboParser/deps/local/lib/libgflags.so.2 /usr/lib/libgflags.so.2
+    $ sudo cp ~/install/TurboParser/deps/local/lib/libglog.so.0 /usr/lib/libglog.so.0
 
-(4) Setup your own configuration of launch.sh and run it. In the first run, you will need to train
-the morphological model and syntactic parser. In the following runs, you will only need to apply them.
+(4) Setup your own configuration of launch.sh and run it. In the first run, you will need to (a) correct the
+    dictionary; and (b) train the morphological model and syntactic parser. In the following runs, you can
+    skip the preparation steps (a) and (b).
 
 
 License

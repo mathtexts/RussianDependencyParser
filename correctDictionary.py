@@ -1,11 +1,16 @@
 __author__ = 'steve'
+import sys
+
+if sys.argc < 3:
+    print "error: the input and output files are missing"
+    exit(0)
 
 in_block = False
 remember_block = False
 block = []
 prev_block = []
-out_file = open('../openCorpora/good_dict.opcorpora.txt', 'w')
-for line in open('../openCorpora/dict.opcorpora.txt'):
+out_file = open(sys.argv[2], 'w')
+for line in open(sys.argv[1]):
     # print line
     line_parts = line.rstrip().split()
     if len(line_parts) == 1:

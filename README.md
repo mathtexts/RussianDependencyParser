@@ -18,13 +18,13 @@ Alexey Gorelov and Mstislav Maslennikov, 2014. "Syntactic analysis of texts". In
 Installation
 ============
 
-(2) Clone RussianDependencyParser into some directory, for example /home/user/RussianDependencyParser
+(1) Clone RussianDependencyParser into some directory, for example /home/user/RussianDependencyParser
    $ cd /home/user/RussianDependencyParser
    $ git clone https://github.com/maslenni/RussianDependencyParser.git
 
-(1) Install TurboParser from the page http://www.ark.cs.cmu.edu/TurboParser/ into /home/user/RussianDependencyParser. You can also install into another directory and symlink this directory;
+(2) Install TurboParser from the page http://www.ark.cs.cmu.edu/TurboParser/ into /home/user/RussianDependencyParser. You can also install into another directory and symlink this directory;
 
-(2) Download the plain text dictionary from opencorpora.org/dict.php, eg into the file /home/user/RussianDependencyParser/openCorpora/dict.opcorpora.txt.;
+(3) Download the plain text dictionary from opencorpora.org/dict.php, eg into the file /home/user/RussianDependencyParser/openCorpora/dict.opcorpora.txt.;
 
 (4) Install cmake and qt
     $ sudo apt-get install cmake qt-sdk

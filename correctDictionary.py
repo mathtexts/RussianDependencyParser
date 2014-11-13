@@ -1,7 +1,7 @@
 __author__ = 'steve'
 import sys
 
-if sys.argc < 3:
+if len(sys.argv) < 3:
     print "error: the input and output files are missing"
     exit(0)
 

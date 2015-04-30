@@ -1,6 +1,9 @@
 set -x
 export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:../TurboParser-2.2.0/deps/local/lib:"
 
+cmake .
+make
+
 # input the infinitive forms before verbs and gerunds in the dictionary file from opencorpora.org
 python correctDictionary.py ../openCorpora/dict.opcorpora.txt ../openCorpora/good_dict.opcorpora.txt
 

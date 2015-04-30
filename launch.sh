@@ -1,7 +1,6 @@
 set -x
 python generateSentence.py "$1"
-cmake .
-make
+
 export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:../TurboParser-2.2.0/deps/local/lib:"
 
 # input the infinitive forms before verbs and gerunds in the dictionary file from opencorpora.org

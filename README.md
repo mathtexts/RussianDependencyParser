@@ -22,7 +22,7 @@ Installation
    $ cd /home/user/RussianDependencyParser
    $ git clone https://github.com/maslenni/RussianDependencyParser.git
 
-(2) Install TurboParser from the page http://www.ark.cs.cmu.edu/TurboParser/ into /home/user/RussianDependencyParser. You can also install into another directory and symlink this directory;
+(2) Install TurboParser v2.1.0 from the page http://www.ark.cs.cmu.edu/TurboParser/ into /home/user/RussianDependencyParser by following their INSTALL.txt. You can also install into another directory and symlink this directory;  
 
 (3) Download the plain text dictionary from opencorpora.org/dict.php, eg into the file /home/user/RussianDependencyParser/openCorpora/dict.opcorpora.txt.;
 
@@ -31,6 +31,19 @@ Installation
     
 (5) Launch the installer
     $ ./install.sh
+
+Installation on Max OS X
+========================
+
+The following amendments to step (2) were found necessary for OS X version 10.10 with gcc 4.9:
+(2b) Please change LD_LIBRARY_PATH to DYLD_LIBRARY_PATH in ... . 
+scripts/run_parser.sh
+scripts/run_tagger.sh
+scripts/train_test_parser.sh
+scripts/train_test_tagger.sh
+install_deps.sh
+
+You may also need to use "sudo" to launch TurboParser;
 
 Running
 =======

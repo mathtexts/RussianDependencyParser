@@ -3,7 +3,6 @@
 
 #include <QTextStream>
 #include <QHash>
-#include <QMultiHash>
 #include <QtGlobal>
 #include <QSet>
 #include "dictionary.h"

@@ -26,10 +26,12 @@ Installation
 
 (3) Download the plain text dictionary from opencorpora.org/dict.php, eg into the file /home/user/RussianDependencyParser/openCorpora/dict.opcorpora.txt.;
 
-(4) Install cmake and qt
+(4) Download and install libmarisa, you can find sources and installation instructions on page http://marisa-trie.googlecode.com/svn/trunk/docs/readme.en.html
+
+(5) Install cmake and qt
     $ sudo apt-get install cmake qt-sdk
     
-(5) Launch the installer
+(6) Launch the installer
     $ ./install.sh
 
 Installation on Max OS X

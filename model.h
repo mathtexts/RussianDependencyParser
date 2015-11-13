@@ -6,6 +6,7 @@
 #include <QMultiHash>
 #include <QtGlobal>
 #include <QSet>
+#include "dictionary.h"
 
 typedef QPair<QString, QString> StringPair;
 
@@ -24,7 +25,7 @@ class Model {
         QHash<StringPair, ulong> countTagsPair;
         QHash<QString, QSet<QString> > endsAndTags;
         QHash<StringPair, ulong> countEndsTags;
-        QMultiHash<QString, StringPair> dict;
+        Dictionary dict;
         ulong countWords;
 };
 

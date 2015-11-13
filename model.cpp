@@ -13,7 +13,6 @@ QTextStream err(stdout);
 
 Model::Model(const QString& hashTableFilename, QTextStream& out) {
     countTagsPair.clear();
-    dict.clear();
     endsAndTags.clear();
     countEndsTags.clear();
 
@@ -24,7 +23,6 @@ Model::Model(const QString& hashTableFilename, QTextStream& out) {
     QByteArray rawInput = fin.readAll();
     rawInput = qUncompress(rawInput);
 
-
     QTextStream htFile(rawInput, QIODevice::ReadOnly);
     htFile.setCodec("CP1251");
 
@@ -32,6 +30,23 @@ Model::Model(const QString& hashTableFilename, QTextStream& out) {
     ulong longtmp;
     QString curTags;
 
+    //first iteration
+    while (true) {
+        htFile >> tmp1;
+        if (tmp1 == "&") {
+            htFile >> curTags;
+            dict.addTags(curTags);
+            continue;
+        }
+        if (tmp1 == "----------") {
+            break;
+        }
+        htFile >> tmp2;
+        dict.addWord(tmp2);
+    }
+    htFile.seek(0);
+    dict.build();
+    //second iteration
     while (true) {
         htFile >> tmp1;
         if (tmp1 == "&") {
@@ -42,7 +57,7 @@ Model::Model(const QString& hashTableFilename, QTextStream& out) {
             break;
         }
         htFile >> tmp2;
-        dict.insert(tmp2, StringPair(tmp1, curTags));
+        dict.insert(tmp2, tmp1, curTags);
     }
     while (true) {
         htFile >> tmp1;

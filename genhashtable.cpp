@@ -110,7 +110,6 @@ main(int argc, char *argv[])
     }
     result += "\n----------";
 
-
     QFile hashFile(argv[2]);
     hashFile.open(QIODevice::WriteOnly);
     QTextCodec *cp1251 = QTextCodec::codecForName("CP1251");

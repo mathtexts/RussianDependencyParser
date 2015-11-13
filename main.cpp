@@ -1,4 +1,5 @@
 #include "model.h"
+#include <iostream>
 #include <QTextStream>
 #include <QFile>
 #include <QXmlStreamReader>
@@ -158,6 +159,9 @@ main(int argc, char* argv[]) {
         Model m(MORPH_HASH_FILE, out);
         m.load(argv[3], out);
         out << "Generating tmp file" << endl;
+        //pause in program
+        int test1;
+        std::cin>>test1;
         if (!printMorph(argv[2], "tmpFile", m, out)) return -1;
         out << "Running TurboParser" << endl;
         QProcess turboParser;

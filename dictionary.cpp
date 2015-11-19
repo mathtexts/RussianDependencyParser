@@ -1,6 +1,4 @@
 #include "dictionary.h"
-#include <QTextStream>
-#include <iostream>
 
 Dictionary::Dictionary()
 {
@@ -55,7 +53,6 @@ void Dictionary::build()
     kAllNormalForms.clear();
     normalForms = new QVector<uint>[words.size()];
     wordTags = new QVector<uint>[words.size()];
-    std::cout<<words.size()<<std::endl;
 }
 
 void Dictionary::insert(QString form, QString normalform, QString tags)
@@ -89,8 +86,6 @@ void Dictionary::insert(QString form, QString normalform, QString tags)
 
 QList<StringPair> Dictionary::values(QString key)
 {
-    QTextStream out(stderr);
-    out.setCodec("UTF-8");
     marisa::Agent agent;
     agent.set_query(key.toUtf8().data());
     QList<StringPair> res;
@@ -107,9 +102,6 @@ QList<StringPair> Dictionary::values(QString key)
             aTags.set_query(*itr2);
             allTags.reverse_lookup(aTags);
             QString tags = QString::fromUtf8(aTags.key().ptr(), aTags.key().length());
-            //out<<key<<" "<<nf<<" "<<tags<<endl;
-            //int tre;
-            //std::cin>>tre;
             res.append(StringPair(nf, tags));
         }
     }

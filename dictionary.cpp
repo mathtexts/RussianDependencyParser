@@ -1,12 +1,17 @@
 #include "dictionary.h"
+#include <QTextStream>
+#include <iostream>
 
 Dictionary::Dictionary()
 {
-    keyset.clear();
+    kWords.clear();
     words.clear();
     normalForms = NULL;
     wordTags = NULL;
+    kAllTags.clear();
     allTags.clear();
+    kAllNormalForms.clear();
+    allNormalForms.clear();
 }
 
 Dictionary::~Dictionary()
@@ -17,53 +22,96 @@ Dictionary::~Dictionary()
     }
     delete [] normalForms;
     delete [] wordTags;
-    keyset.clear();
+    kWords.clear();
     words.clear();
+    kAllTags.clear();
     allTags.clear();
+    kAllNormalForms.clear();
+    allNormalForms.clear();
 }
     
 void Dictionary::addWord(QString word)
 {
-    keyset.push_back(word.toUtf8().data());
+    kWords.push_back(word.toUtf8().data());
 }
 
 void Dictionary::addTags(QString tags)
 {
-    allTags.append(tags);
+    kAllTags.push_back(tags.toUtf8().data());
+}
+
+void Dictionary::addNormalForm(QString normalform)
+{
+    kAllNormalForms.push_back(normalform.toUtf8().data());
 }
 
 void Dictionary::build()
 {
-    words.build(keyset);
-    keyset.clear();
-    normalForms = new QVector<QString>[words.size()];
-    wordTags = new QVector<int>[words.size()];
+    words.build(kWords);
+    kWords.clear();
+    allTags.build(kAllTags);
+    kAllTags.clear();
+    allNormalForms.build(kAllNormalForms);
+    kAllNormalForms.clear();
+    normalForms = new QVector<uint>[words.size()];
+    wordTags = new QVector<uint>[words.size()];
+    std::cout<<words.size()<<std::endl;
 }
 
 void Dictionary::insert(QString form, QString normalform, QString tags)
 {
-    marisa::Agent agent;
-    agent.set_query(form.toUtf8().data());
-    if(words.lookup(agent)){
-        uint id = agent.key().id();
-        int index = 0;
-        normalForms[id].append(normalform);
-        if((index = allTags.indexOf(tags)) != -1)
-            wordTags[id].append(index);
-    }
+    uint id = 0, tid = 0, nfid = 0;
+
+    marisa::Agent aForm;
+    aForm.set_query(form.toUtf8().data());
+    if(words.lookup(aForm))
+        id = aForm.key().id();
+    else
+        return;
+
+    marisa::Agent aTags;
+    aTags.set_query(tags.toUtf8().data());
+    if(allTags.lookup(aTags))
+        tid = aTags.key().id();
+    else
+        return;
+
+    marisa::Agent aNormalForm;
+    aNormalForm.set_query(normalform.toUtf8().data());
+    if(allNormalForms.lookup(aNormalForm))
+        nfid = aNormalForm.key().id();
+    else
+        return;
+
+    wordTags[id].append(tid);
+    normalForms[id].append(nfid);
 }
 
 QList<StringPair> Dictionary::values(QString key)
 {
+    QTextStream out(stderr);
+    out.setCodec("UTF-8");
     marisa::Agent agent;
     agent.set_query(key.toUtf8().data());
     QList<StringPair> res;
     if(words.lookup(agent)){
         uint id = agent.key().id();
-        QVector<QString>::const_iterator itr1 = normalForms[id].begin();
-        QVector<int>::const_iterator itr2 = wordTags[id].begin();
-        for( ; itr1 != normalForms[id].end(); itr1++, itr2++)
-            res.append(StringPair(*itr1, allTags[*itr2]));
+        QVector<uint>::const_iterator itr1 = normalForms[id].begin();
+        QVector<uint>::const_iterator itr2 = wordTags[id].begin();
+        for( ; itr1 != normalForms[id].end(); itr1++, itr2++){
+            marisa::Agent aNormalForm;
+            aNormalForm.set_query(*itr1);
+            allNormalForms.reverse_lookup(aNormalForm);
+            QString nf = QString::fromUtf8(aNormalForm.key().ptr(), aNormalForm.key().length());
+            marisa::Agent aTags;
+            aTags.set_query(*itr2);
+            allTags.reverse_lookup(aTags);
+            QString tags = QString::fromUtf8(aTags.key().ptr(), aTags.key().length());
+            //out<<key<<" "<<nf<<" "<<tags<<endl;
+            //int tre;
+            //std::cin>>tre;
+            res.append(StringPair(nf, tags));
+        }
     }
     return res;
 }

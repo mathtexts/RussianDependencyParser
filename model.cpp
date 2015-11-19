@@ -42,7 +42,6 @@ Model::Model(const QString& hashTableFilename, QTextStream& out) {
             break;
         }
         htFile >> tmp2;
-        dict.addNormalForm(tmp1);
         dict.addWord(tmp2);
     }
     htFile.seek(0);

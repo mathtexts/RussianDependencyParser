@@ -4,12 +4,10 @@ Dictionary::Dictionary()
 {
     kWords.clear();
     words.clear();
-    normalForms = NULL;
-    wordTags = NULL;
     kAllTags.clear();
     allTags.clear();
-    kAllNormalForms.clear();
-    allNormalForms.clear();
+    normalForms = NULL;
+    wordTags = NULL;
 }
 
 Dictionary::~Dictionary()
@@ -24,8 +22,6 @@ Dictionary::~Dictionary()
     words.clear();
     kAllTags.clear();
     allTags.clear();
-    kAllNormalForms.clear();
-    allNormalForms.clear();
 }
     
 void Dictionary::addWord(QString word)
@@ -38,19 +34,12 @@ void Dictionary::addTags(QString tags)
     kAllTags.push_back(tags.toUtf8().data());
 }
 
-void Dictionary::addNormalForm(QString normalform)
-{
-    kAllNormalForms.push_back(normalform.toUtf8().data());
-}
-
 void Dictionary::build()
 {
     words.build(kWords);
     kWords.clear();
     allTags.build(kAllTags);
     kAllTags.clear();
-    allNormalForms.build(kAllNormalForms);
-    kAllNormalForms.clear();
     normalForms = new QVector<uint>[words.size()];
     wordTags = new QVector<uint>[words.size()];
 }
@@ -75,7 +64,7 @@ void Dictionary::insert(QString form, QString normalform, QString tags)
 
     marisa::Agent aNormalForm;
     aNormalForm.set_query(normalform.toUtf8().data());
-    if(allNormalForms.lookup(aNormalForm))
+    if(words.lookup(aNormalForm))
         nfid = aNormalForm.key().id();
     else
         return;
@@ -96,7 +85,7 @@ QList<StringPair> Dictionary::values(QString key)
         for( ; itr1 != normalForms[id].end(); itr1++, itr2++){
             marisa::Agent aNormalForm;
             aNormalForm.set_query(*itr1);
-            allNormalForms.reverse_lookup(aNormalForm);
+            words.reverse_lookup(aNormalForm);
             QString nf = QString::fromUtf8(aNormalForm.key().ptr(), aNormalForm.key().length());
             marisa::Agent aTags;
             aTags.set_query(*itr2);

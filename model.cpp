@@ -8,75 +8,47 @@
 #include <QList>
 #include <QHash>
 #include <QDebug>
+#include <stdio.h>
 
 QTextStream err(stdout);
 
-Model::Model(const QString& hashTableFilename, QTextStream& out) {
+Model::Model(const char *mapfile, const char *wordsfile, const char *tagsfile, 
+        const char *endsfile) 
+{
     countTagsPair.clear();
-    endsAndTags.clear();
-    countEndsTags.clear();
+    words.load(wordsfile);
+    tags.load(tagsfile);
+    ends.load(endsfile);
 
-    QFile fin(hashTableFilename);
-    if (!fin.open(QIODevice::ReadOnly)) {
-        out << "ERROR: hash table file not found" << endl;
-    }
-    QByteArray rawInput = fin.readAll();
-    rawInput = qUncompress(rawInput);
+    wordsMap = new Map[words.size()];
+    endsMap = new Map[ends.size()];
 
-    QTextStream htFile(rawInput, QIODevice::ReadOnly);
-    htFile.setCodec("CP1251");
-
-    QString tmp1, tmp2, tmp3;
-    ulong longtmp;
-    QString curTags;
-
-    //first iteration
-    while (true) {
-        htFile >> tmp1;
-        if (tmp1 == "&") {
-            htFile >> curTags;
-            dict.addTags(curTags);
-            continue;
-        }
-        if (tmp1 == "----------") {
-            break;
-        }
-        htFile >> tmp2;
-        dict.addWord(tmp2);
-    }
-    htFile.seek(0);
-    dict.build();
-    //second iteration
-    while (true) {
-        htFile >> tmp1;
-        if (tmp1 == "&") {
-            htFile >> curTags;
-            continue;
-        }
-        if (tmp1 == "----------") {
-            break;
-        }
-        htFile >> tmp2;
-        dict.insert(tmp2, tmp1, curTags);
-    }
-    while (true) {
-        htFile >> tmp1;
-        if (tmp1 == "----------") {
-            break;
-        }
-        htFile >> tmp2;
-        endsAndTags[tmp1].insert(tmp2);
-    }
-    while (true) {
-        htFile >> tmp1;
-        if (tmp1 == "----------") {
-            break;
-        }
-        htFile >> tmp2 >> longtmp;
-        countEndsTags[StringPair(tmp1, tmp2)] = longtmp;
+    FILE *file = fopen(mapfile, "r");
+    if(file == NULL){
+        fprintf(stderr, "ERROR: map file not found\n");
     }
 
-    fin.close();
+    for(uint i = 0; i < words.size(); i++){
+        uchar temp;
+        fread(&temp, 1, 1, file);
+        wordsMap[i].size = temp * 2;
+        wordsMap[i].mapArray = new uint[wordsMap[i].size];
+        for(uchar j = 0; j < wordsMap[i].size; j += 2){
+            fread(wordsMap[i].mapArray + j, sizeof(uint), 1, file);
+            fread(wordsMap[i].mapArray + j + 1, sizeof(uint), 1, file);
+        }
+    }
+    for(uint i = 0; i < ends.size(); i++){
+        uchar temp;
+        fread(&temp, 1, 1, file);
+        endsMap[i].size = temp * 2;
+        endsMap[i].mapArray = new uint[endsMap[i].size];
+        for(uchar j = 0; j < endsMap[i].size; j += 2){
+            fread(endsMap[i].mapArray + j, sizeof(uint), 1, file);
+            fread(endsMap[i].mapArray + j + 1, sizeof(uint), 1, file);
+        }
+    }
+    fclose(file);
 }
 
 bool
@@ -233,7 +205,7 @@ Model::getTags(const QString& word, QList<ulong>& probs) {
     probs.clear();
     QChar yo = QString::fromUtf8("Ё")[0];
     QChar ye = QString::fromUtf8("Е")[0];
-    result = dict.values(word.toUpper().replace(yo, ye, Qt::CaseInsensitive));
+    result = getNFandTags(word.toUpper().replace(yo, ye, Qt::CaseInsensitive));
     if (result.size() > 0) {
         for (QList<StringPair>::iterator i = result.begin(); i != result.end(); ++i) {
             probs.append(1);
@@ -250,15 +222,75 @@ Model::getTags(const QString& word, QList<ulong>& probs) {
         result.append(StringPair(word, "LATN"));
         probs.append(1);
     } else {
-        QSet<QString> predictedTags = endsAndTags[word.toUpper().right(3)];
+        QVector<QPair<QString, uint> > predictedTags = getTagsAndCount(word.toUpper().right(3));
         if (predictedTags.size() == 0) {
             result.append(StringPair(word, "UNKN"));
             probs.append(1);
         }
-        for (QSet<QString>::const_iterator itr = predictedTags.begin(); itr != predictedTags.end(); ++itr) {
-            result.append(StringPair(word, *itr));
-            probs.append(countEndsTags[StringPair(word.toUpper().right(3), *itr)]);
+        for (QVector<QPair<QString, uint> >::const_iterator itr = predictedTags.begin(); itr != predictedTags.end(); ++itr) {
+            result.append(StringPair(word, (*itr).first));
+            probs.append((*itr).second);
         }
     }
     return result;
+}
+
+QList<StringPair> Model::getNFandTags(const QString& key) const
+{
+    QByteArray temp = key.toUtf8();
+    marisa::Agent agent;
+    agent.set_query(temp.data());
+    QList<StringPair> res;
+    if(words.lookup(agent)){
+        uint id = agent.key().id();
+        for(uchar i = 0; i < wordsMap[id].size; i += 2){
+            marisa::Agent aNormalForm;
+            aNormalForm.set_query(wordsMap[id].mapArray[i]);
+            words.reverse_lookup(aNormalForm);
+            QString nf = QString::fromUtf8(aNormalForm.key().ptr(), aNormalForm.key().length());
+            marisa::Agent aTags;
+            aTags.set_query(wordsMap[id].mapArray[i + 1]);
+            tags.reverse_lookup(aTags);
+            QString t = QString::fromUtf8(aTags.key().ptr(), aTags.key().length());
+            res.append(StringPair(nf, t));
+        }
+    }
+    return res;
+}
+
+QVector<QPair<QString, uint> > Model::getTagsAndCount(const QString& key) const
+{
+    QByteArray temp = key.toUtf8();
+    marisa::Agent agent;
+    agent.set_query(temp.data());
+    QVector<QPair<QString, uint> > res;
+    if(ends.lookup(agent)){
+        uint id = agent.key().id();
+        for(uchar i = 0; i < endsMap[id].size; i += 2){
+            marisa::Agent aTags;
+            aTags.set_query(endsMap[id].mapArray[i]);
+            tags.reverse_lookup(aTags);
+            QString t = QString::fromUtf8(aTags.key().ptr(), aTags.key().length());
+            res.append(QPair<QString, uint>(t, endsMap[id].mapArray[i + 1]));
+        }
+    }
+    return res;
+}
+
+Model::~Model()
+{
+    countTagsPair.clear();
+
+    for(uint i = 0; i < words.size(); i++)
+        delete [] wordsMap[i].mapArray;
+    delete [] wordsMap;
+
+    for(uint i = 0; i < ends.size(); i++)
+        delete [] endsMap[i].mapArray;
+    delete [] endsMap;
+
+    words.clear();
+    tags.clear();
+    ends.clear();
+
 }

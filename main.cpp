@@ -7,8 +7,7 @@
 #include <QProcess>
 #include <QDir>
 #include <QApplication>
-
-static char const* const MORPH_HASH_FILE = "hash.bin";
+#include <iostream>
 
 bool
 printMorph(const QString& f1, const QString& f2, Model& m, QTextStream& out) {
@@ -123,7 +122,7 @@ main(int argc, char* argv[]) {
             printHelp();
             return 0;
         }
-        Model m(MORPH_HASH_FILE, out);
+        Model m("map.bin", "words.trie", "tags.trie", "ends.trie");
         m.train(argv[2], out);
         m.save(argv[3], out);
         return 0;
@@ -132,7 +131,7 @@ main(int argc, char* argv[]) {
             printHelp();
             return 0;
         }
-        Model m(MORPH_HASH_FILE, out);
+        Model m("map.bin", "words.trie", "tags.trie", "ends.trie");
         m.load(argv[4], out);
         if (!printMorph(argv[2], argv[3], m, out)) return -1;
     } else if (QString(argv[1]) == "--synttrain") {
@@ -140,7 +139,7 @@ main(int argc, char* argv[]) {
             printHelp();
             return 0;
         }
-        Model m(MORPH_HASH_FILE, out);
+        Model m("map.bin", "words.trie", "tags.trie", "ends.trie");
         m.load(argv[3], out);
         if (!printMorph(argv[2], "tmpFile", m, out)) return -1;
         QProcess turboParser;
@@ -155,9 +154,11 @@ main(int argc, char* argv[]) {
             return 0;
         }
         out << "Loading model" << endl;
-        Model m(MORPH_HASH_FILE, out);
+        Model m("map.bin", "words.trie", "tags.trie", "ends.trie");
         m.load(argv[3], out);
         out << "Generating tmp file" << endl;
+        int tre;
+        std::cin>>tre;
         if (!printMorph(argv[2], "tmpFile", m, out)) return -1;
         out << "Running TurboParser" << endl;
         QProcess turboParser;

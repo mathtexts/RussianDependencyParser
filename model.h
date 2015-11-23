@@ -4,14 +4,24 @@
 #include <QTextStream>
 #include <QHash>
 #include <QtGlobal>
-#include <QSet>
-#include "dictionary.h"
+#include <QVector>
+#include "marisa.h"
 
 typedef QPair<QString, QString> StringPair;
+typedef unsigned char uchar;
+typedef unsigned int uint;
+
+struct Map{
+    uchar size;
+    uint *mapArray;
+    Map() { size = 0; mapArray = NULL; }
+    ~Map() {}
+};
 
 class Model {
     public:
-        Model(const QString &hashTableFilename, QTextStream &out);
+        Model(const char *mapfile, const char *wordsfile, const char *tagsfile, const char *endsfile);
+        virtual ~Model();
         bool train(const QString &filename, QTextStream &out);
         double test(const QString &filename, QTextStream &out);
         void print(QTextStream &out);
@@ -22,10 +32,17 @@ class Model {
 
     private:
         QHash<StringPair, ulong> countTagsPair;
-        QHash<QString, QSet<QString> > endsAndTags;
-        QHash<StringPair, ulong> countEndsTags;
-        Dictionary dict;
         ulong countWords;
+
+        marisa::Trie words;
+        marisa::Trie tags;
+        marisa::Trie ends;
+
+        Map *wordsMap;
+        Map *endsMap;
+
+        QList<StringPair> getNFandTags(const QString& key) const;
+        QVector<QPair<QString, uint> > getTagsAndCount(const QString& key) const;
 };
 
 #endif

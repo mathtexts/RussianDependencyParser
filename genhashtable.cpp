@@ -1,121 +1,221 @@
-#include <QFile>
-#include <QTextStream>
-#include <QTextCodec>
-#include <QStringList>
-#include <QMultiHash>
-#include <QHash>
-#include <QSet>
 #include <QVector>
+#include <marisa.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-typedef QPair<QString, QString> StringPair;
+typedef unsigned int uint;
+typedef unsigned char uchar;
 
-int
-main(int argc, char *argv[])
+uint getIndexOf(const char *key, const marisa::Trie& trie)
 {
+    uint res = 0;
+    marisa::Agent agent;
+    agent.set_query(key);
+    if(trie.lookup(agent))
+        res = agent.key().id();
+    return res;
+}
 
-    //QMultiHash<QString, StringPair> hashTable;
-    QHash<QString, QSet<QString> > predictTable;
-    QHash<StringPair, ulong> countTable;
-    QVector<QString> tagsV;
-    QHash<ulong, QVector<StringPair> > hashTb;
-    tagsV.clear();
-    QFile fin(argv[1]);
-    QTextStream out(stdout);
-    QTextStream err(stderr);
+int main(int argc, char **argv)
+{
+    marisa::Trie words;
+    marisa::Trie tags;
+    marisa::Trie ends;
+    marisa::Keyset kWords;
+    marisa::Keyset kTags;
+    marisa::Keyset kEnds;
+    QVector<uint> *wordsToTags;
+    QVector<uint> *wordsToNormalForms;
+    QVector<uint> *endsToTags;
+    QVector<uint> *endsToCount;
 
-    if (argc != 3) {
-        out << "Usage: genhashtable dictfile.txt hashtablefile.txt" << endl;
+    if (argc != 6) {
+        printf("Usage: genhashtable dictfile.txt map.bin words.trie tags.trie ends.trie\n");
         return 0;
     }
 
-    if (!fin.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        err << "ERROR: input file not found" << endl;
+    FILE *file = fopen(argv[1], "r");
+
+    if (file == NULL) {
+        fprintf(stderr, "ERROR: input file not found\n");
         return 1;
     }
 
-    QTextStream sfin(&fin);
-    sfin.setCodec("UTF-8");
-    out.setCodec("UTF-8");
-    QString line = sfin.readLine();
-    QStringList lineParts;
-
+    char *line = NULL;
+    char lineParts[3][256];
+    char form[256], tag[256];
+    char normalForm[256];
     bool isfirst = false;
+    size_t length = 0;
+    int partsCount = 0;
 
-    QString form, normalForm, tags;
-    while (!line.isNull()) {
-        lineParts = line.split(QRegExp("[\t ]"), QString::SkipEmptyParts);
+    //first iteration
+    while (getline(&line, &length, file) != -1) {
+        partsCount = 0;
+        int j = 0, i = 0;
+        bool flag = false;
+        while(line[i] != '\n'){
+            if(line[i] == ' ' || line[i] == '\t'){
+                lineParts[partsCount][j] = '\0';
+                partsCount++;
+                j = 0;
+                i++;
+                while(line[i] == ' ' || line[i] == '\t')
+                    i++;
+            }else{
+                flag = true;
+                lineParts[partsCount][j] = line[i];
+                i++;
+                j++;
+            }
+        }
+        if(flag){
+            lineParts[partsCount][j] = '\0';
+            partsCount++;
+        }
+        if (partsCount >= 2) {
+            strcpy(form, lineParts[0]); 
+            strcpy(tag, lineParts[1]);
+            if (partsCount == 3){
+                int l = strlen(tag);
+                tag[l] = ',';
+                strcpy(tag + l + 1, lineParts[2]);
+                tag[l + 1 + strlen(lineParts[2])] = '\0';
+            }
+            kWords.push_back(form);
+            kTags.push_back(tag);
+            if(strlen(form) > 3)
+                kEnds.push_back(form + strlen(form) - 3);
+        }
+        free(line);
+        line = NULL;
+    }
+
+    words.build(kWords);
+    words.save(argv[3]);
+    tags.build(kTags);
+    tags.save(argv[4]);
+    ends.build(kEnds);
+    ends.save(argv[5]);
+    wordsToTags = new QVector<uint>[words.size()];
+    wordsToNormalForms = new QVector<uint>[words.size()];
+    endsToTags = new QVector<uint>[ends.size()];
+    endsToCount = new QVector<uint>[ends.size()];
+
+    fseek(file, 0, SEEK_SET);
+    free(line);
+    line = NULL;
+    //second iteration
+    while (getline(&line, &length, file) != -1) {
+        partsCount = 0;
+        int j = 0, i = 0;
+        bool flag = false;
+        while(line[i] != '\n'){
+            if(line[i] == ' ' || line[i] == '\t'){
+                lineParts[partsCount][j] = '\0';
+                partsCount++;
+                j = 0;
+                i++;
+                while(line[i] == ' ' || line[i] == '\t')
+                    i++;
+            }else{
+                flag = true;
+                lineParts[partsCount][j] = line[i];
+                i++;
+                j++;
+            }
+        }
+        if(flag){
+            lineParts[partsCount][j] = '\0';
+            partsCount++;
+        }
         if (isfirst) {
-            if (!(lineParts.size() < 2 || lineParts[1].startsWith("VERB,") || lineParts[1].startsWith("PRTF,")
-                    || lineParts[1].startsWith("PRTS,") || lineParts[1].startsWith("GRND,"))) {
-                normalForm = lineParts[0];
+            if (partsCount >= 2 && strncmp(lineParts[1], "VERB,", 5) && 
+                  strncmp(lineParts[1], "PRTF,", 5) &&
+                  strncmp(lineParts[1], "PRTS,", 5) &&
+                  strncmp(lineParts[1], "GRND,", 5)){
+                strcpy(normalForm, lineParts[0]);
             }
             isfirst = false;
         }
-
-        if (lineParts.size() > 2 && lineParts[1].startsWith("INFN,")) {
-            normalForm = lineParts[0];
+        if (partsCount > 2 && !strncmp(lineParts[1], "INFN,", 5)) {
+            strcpy(normalForm, lineParts[0]);
         }
-
-        if (lineParts.size() < 1) {
-            line = sfin.readLine();
+        if (partsCount < 1) {
+            free(line);
+            line = NULL;
             continue;
         }
-
-        if (lineParts.size() == 1) {
+        if (partsCount == 1) {
             isfirst = true;
-            line = sfin.readLine();
+            free(line);
+            line = NULL;
             continue;
         }
-        form = lineParts[0]; 
-        QChar yo = QString::fromUtf8("Ё")[0];
-        QChar ye = QString::fromUtf8("Е")[0];
-        form.replace(yo, ye, Qt::CaseInsensitive);
-        tags = lineParts[1];
-        
-        if (lineParts.size() == 3) {
-            tags += ("," + lineParts[2]);
+        strcpy(form, lineParts[0]); 
+        strcpy(tag, lineParts[1]);
+        if (partsCount == 3){
+            int l = strlen(tag);
+            tag[l] = ',';
+            strcpy(tag + l + 1, lineParts[2]);
+            tag[l + 1 + strlen(lineParts[2])] = '\0';
         }
 
-        if (tagsV.indexOf(tags) == -1) {
-            tagsV.append(tags);
+        uint temp1, temp2;
+        int index;
+        temp1 = getIndexOf(form, words);
+        temp2 = getIndexOf(tag, tags);
+
+        wordsToNormalForms[temp1].append(getIndexOf(normalForm, words));
+        wordsToTags[temp1].append(temp2);
+        if(strlen(form) > 3){
+            temp1 = getIndexOf(form + strlen(form) - 3, ends);
+            if((index = endsToTags[temp1].indexOf(temp2)) == -1){
+                endsToTags[temp1].append(temp2);
+                endsToCount[temp1].append(1);
+            }else{
+                endsToCount[temp1][index]++;
+            }
         }
-        hashTb[tagsV.indexOf(tags)].append(StringPair(normalForm, form));
 
-        //hashTable.insert(form, StringPair(normalForm, tags));
-        predictTable[form.right(3)].insert(tags);
-        ++countTable[StringPair(form.right(3), tags)];
-
-        line = sfin.readLine();
+        free(line);
+        line = NULL;
     }
-    fin.close();
+    fclose(file);
+    free(line);
+    uint wc = words.size();
+    uint ec = ends.size();
+    words.clear();
+    ends.clear();
+    tags.clear();
 
-    //out << "Table size: " << hashTable.size() << endl;
-    QString result("");
-    for (int i = 0; i < tagsV.size(); ++i) {
-        result += ("& " + tagsV[i] + " ");
-        for (int j = 0; j < hashTb[i].size(); ++j) {
-            result += (hashTb[i][j].first + " " + hashTb[i][j].second + " ");
+    file = fopen(argv[2], "w");
+    for(uint i = 0; i < wc; i++){
+        uchar size = (uchar)wordsToNormalForms[i].size();
+        fwrite(&size, 1, 1, file);
+        for(uchar j = 0; j < size; j++){
+            fwrite(&wordsToNormalForms[i][j], sizeof(uint), 1, file);
+            fwrite(&wordsToTags[i][j], sizeof(uint), 1, file);
         }
+        wordsToNormalForms[i].clear();
+        wordsToTags[i].clear();
     }
-    
-    result += "\n----------";
-    for (QHash<QString, QSet<QString> >::const_iterator itr = predictTable.begin(); itr != predictTable.end(); ++itr) {
-        for (QSet<QString>::const_iterator jtr = itr.value().begin(); jtr != itr.value().end(); ++jtr) {
-            result += (" " + itr.key() + " " + *jtr);
+    delete [] wordsToNormalForms;
+    delete [] wordsToTags;
+    for(uint i = 0; i < ec; i++){
+        uchar size = (uchar)endsToTags[i].size();
+        fwrite(&size, 1, 1, file);
+        for(uchar j = 0; j < size; j++){
+            fwrite(&endsToTags[i][j], sizeof(uint), 1, file);
+            fwrite(&endsToCount[i][j], sizeof(uint), 1, file);
         }
+        endsToTags[i].clear();
+        endsToCount[i].clear();
     }
-    result += "\n----------";
-    for (QHash<StringPair, ulong>::const_iterator itr = countTable.begin(); itr != countTable.end(); ++itr) {
-        result += (" " + itr.key().first + " " + itr.key().second + " " + QString::number(itr.value()));
-    }
-    result += "\n----------";
-
-    QFile hashFile(argv[2]);
-    hashFile.open(QIODevice::WriteOnly);
-    QTextCodec *cp1251 = QTextCodec::codecForName("CP1251");
-    hashFile.write(qCompress(cp1251->fromUnicode(result)));
-    hashFile.flush();
-    hashFile.close();
+    delete [] endsToTags;
+    delete [] endsToCount;
+    fclose(file);
 
     return 0;
 }

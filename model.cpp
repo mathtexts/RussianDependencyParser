@@ -32,20 +32,30 @@ Model::Model(const char *mapfile, const char *wordsfile, const char *tagsfile,
         uchar temp;
         fread(&temp, 1, 1, file);
         wordsMap[i].size = temp * 2;
-        wordsMap[i].mapArray = new uint[wordsMap[i].size];
-        for(uchar j = 0; j < wordsMap[i].size; j += 2){
-            fread(wordsMap[i].mapArray + j, sizeof(uint), 1, file);
-            fread(wordsMap[i].mapArray + j + 1, sizeof(uint), 1, file);
+        if(temp == 1){
+            fread(&wordsMap[i].first, sizeof(uint), 1, file);
+            fread(&wordsMap[i].second, sizeof(uint), 1, file);
+        }else{
+            wordsMap[i].mapArray = new uint[wordsMap[i].size];
+            for(uchar j = 0; j < wordsMap[i].size; j += 2){
+                fread(wordsMap[i].mapArray + j, sizeof(uint), 1, file);
+                fread(wordsMap[i].mapArray + j + 1, sizeof(uint), 1, file);
+            }
         }
     }
     for(uint i = 0; i < ends.size(); i++){
         uchar temp;
         fread(&temp, 1, 1, file);
         endsMap[i].size = temp * 2;
-        endsMap[i].mapArray = new uint[endsMap[i].size];
-        for(uchar j = 0; j < endsMap[i].size; j += 2){
-            fread(endsMap[i].mapArray + j, sizeof(uint), 1, file);
-            fread(endsMap[i].mapArray + j + 1, sizeof(uint), 1, file);
+        if(temp == 1){
+            fread(&endsMap[i].first, sizeof(uint), 1, file);
+            fread(&endsMap[i].second, sizeof(uint), 1, file);
+        }else{
+            endsMap[i].mapArray = new uint[endsMap[i].size];
+            for(uchar j = 0; j < endsMap[i].size; j += 2){
+                fread(endsMap[i].mapArray + j, sizeof(uint), 1, file);
+                fread(endsMap[i].mapArray + j + 1, sizeof(uint), 1, file);
+            }
         }
     }
     fclose(file);
@@ -243,13 +253,25 @@ QList<StringPair> Model::getNFandTags(const QString& key) const
     QList<StringPair> res;
     if(words.lookup(agent)){
         uint id = agent.key().id();
-        for(uchar i = 0; i < wordsMap[id].size; i += 2){
+        if(wordsMap[id].size > 2){
+            for(uchar i = 0; i < wordsMap[id].size; i += 2){
+                marisa::Agent aNormalForm;
+                aNormalForm.set_query(wordsMap[id].mapArray[i]);
+                words.reverse_lookup(aNormalForm);
+                QString nf = QString::fromUtf8(aNormalForm.key().ptr(), aNormalForm.key().length());
+                marisa::Agent aTags;
+                aTags.set_query(wordsMap[id].mapArray[i + 1]);
+                tags.reverse_lookup(aTags);
+                QString t = QString::fromUtf8(aTags.key().ptr(), aTags.key().length());
+                res.append(StringPair(nf, t));
+            }
+        }else{
             marisa::Agent aNormalForm;
-            aNormalForm.set_query(wordsMap[id].mapArray[i]);
+            aNormalForm.set_query(wordsMap[id].first);
             words.reverse_lookup(aNormalForm);
             QString nf = QString::fromUtf8(aNormalForm.key().ptr(), aNormalForm.key().length());
             marisa::Agent aTags;
-            aTags.set_query(wordsMap[id].mapArray[i + 1]);
+            aTags.set_query(wordsMap[id].second);
             tags.reverse_lookup(aTags);
             QString t = QString::fromUtf8(aTags.key().ptr(), aTags.key().length());
             res.append(StringPair(nf, t));
@@ -266,12 +288,20 @@ QVector<QPair<QString, uint> > Model::getTagsAndCount(const QString& key) const
     QVector<QPair<QString, uint> > res;
     if(ends.lookup(agent)){
         uint id = agent.key().id();
-        for(uchar i = 0; i < endsMap[id].size; i += 2){
+        if(endsMap[id].size > 2){
+            for(uchar i = 0; i < endsMap[id].size; i += 2){
+                marisa::Agent aTags;
+                aTags.set_query(endsMap[id].mapArray[i]);
+                tags.reverse_lookup(aTags);
+                QString t = QString::fromUtf8(aTags.key().ptr(), aTags.key().length());
+                res.append(QPair<QString, uint>(t, endsMap[id].mapArray[i + 1]));
+            }
+        }else{
             marisa::Agent aTags;
-            aTags.set_query(endsMap[id].mapArray[i]);
+            aTags.set_query(endsMap[id].first);
             tags.reverse_lookup(aTags);
             QString t = QString::fromUtf8(aTags.key().ptr(), aTags.key().length());
-            res.append(QPair<QString, uint>(t, endsMap[id].mapArray[i + 1]));
+            res.append(QPair<QString, uint>(t, endsMap[id].second));
         }
     }
     return res;
@@ -282,11 +312,13 @@ Model::~Model()
     countTagsPair.clear();
 
     for(uint i = 0; i < words.size(); i++)
-        delete [] wordsMap[i].mapArray;
+        if(wordsMap[i].size > 2)
+            delete [] wordsMap[i].mapArray;
     delete [] wordsMap;
 
     for(uint i = 0; i < ends.size(); i++)
-        delete [] endsMap[i].mapArray;
+        if(endsMap[i].size > 2)
+            delete [] endsMap[i].mapArray;
     delete [] endsMap;
 
     words.clear();

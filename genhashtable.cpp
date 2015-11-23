@@ -17,6 +17,13 @@ uint getIndexOf(const char *key, const marisa::Trie& trie)
     return res;
 }
 
+void rpl(char *str)
+{
+    char *temp;
+    while((temp = strstr(str, "Ё")))
+        strncpy(temp, "Е", strlen("Е"));
+}
+
 int main(int argc, char **argv)
 {
     marisa::Trie words;
@@ -76,6 +83,7 @@ int main(int argc, char **argv)
         }
         if (partsCount >= 2) {
             strcpy(form, lineParts[0]); 
+            rpl(form);
             strcpy(tag, lineParts[1]);
             if (partsCount == 3){
                 int l = strlen(tag);
@@ -136,11 +144,13 @@ int main(int argc, char **argv)
                   strncmp(lineParts[1], "PRTS,", 5) &&
                   strncmp(lineParts[1], "GRND,", 5)){
                 strcpy(normalForm, lineParts[0]);
+                rpl(normalForm);
             }
             isfirst = false;
         }
         if (partsCount > 2 && !strncmp(lineParts[1], "INFN,", 5)) {
             strcpy(normalForm, lineParts[0]);
+            rpl(normalForm);
         }
         if (partsCount < 1) {
             free(line);
@@ -154,6 +164,7 @@ int main(int argc, char **argv)
             continue;
         }
         strcpy(form, lineParts[0]); 
+        rpl(form);
         strcpy(tag, lineParts[1]);
         if (partsCount == 3){
             int l = strlen(tag);

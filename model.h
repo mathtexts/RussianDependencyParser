@@ -13,9 +13,13 @@ typedef unsigned int uint;
 
 struct Map{
     uchar size;
-    uint *mapArray;
-    Map() { size = 0; mapArray = NULL; }
-    ~Map() {}
+    union{
+        uint *mapArray;
+        struct{
+            uint first;
+            uint second;
+        };
+    };
 };
 
 class Model {

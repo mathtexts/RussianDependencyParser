@@ -13,13 +13,16 @@ typedef unsigned int uint;
 
 struct Map{
     uchar size;
-    union{
-        uint *mapArray;
-        struct{
+    /* this union needed to prevent internal fragmentation
+     * without it there will be too many arrays of size 2 (uint multiMap[2])
+     * therefore was added singleMap for this situation */
+    union {
+        uint *multiMap;
+        struct {
             uint first;
             uint second;
-        };
-    };
+        } singleMap;
+    } u;
 };
 
 class Model {

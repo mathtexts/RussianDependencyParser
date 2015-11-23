@@ -7,7 +7,6 @@
 #include <QProcess>
 #include <QDir>
 #include <QApplication>
-#include <iostream>
 
 bool
 printMorph(const QString& f1, const QString& f2, Model& m, QTextStream& out) {
@@ -157,8 +156,6 @@ main(int argc, char* argv[]) {
         Model m("map.bin", "words.trie", "tags.trie", "ends.trie");
         m.load(argv[3], out);
         out << "Generating tmp file" << endl;
-        int tre;
-        std::cin>>tre;
         if (!printMorph(argv[2], "tmpFile", m, out)) return -1;
         out << "Running TurboParser" << endl;
         QProcess turboParser;

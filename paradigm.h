@@ -14,8 +14,7 @@ class Paradigm{
     int size;
     int *array;
 public:
-    Paradigm(int s);
-    Paradigm(ifstream& ifs);
+    Paradigm();
     Paradigm(const Paradigm& other);
     virtual ~Paradigm() { delete [] array; }
     bool operator==(const Paradigm& other) const;
@@ -24,6 +23,7 @@ public:
     static string LCSubstr(const string& str1, const string& str2);
     int operator[](int index) const { return array[index]; }
     void save(ofstream& ofs) const;
+    void load(ifstream& ifs);
 };
 
 #endif

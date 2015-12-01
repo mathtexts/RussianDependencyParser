@@ -2,7 +2,7 @@ cmake_minimum_required (VERSION 2.6)
 
 set (PROJECT syntaxanalyzer)
 project (${PROJECT})
-add_definitions (-g -Wall -pedantic -std=c++0x)
+add_definitions (-g -Wall -pedantic -std=c++11)
 
 set (SOURCES_GENDICT
         gendict.cpp paradigm.h paradigm.cpp)

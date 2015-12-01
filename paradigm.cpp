@@ -2,10 +2,10 @@
 #include <algorithm>
 #include <iostream>
 
-Paradigm::Paradigm(int s)
+Paradigm::Paradigm()
 {
-    size = s;
-    array = new int[size * 3];
+    size = 0;
+    array = NULL;
 }
 
 Paradigm::Paradigm(const Paradigm& other)
@@ -16,7 +16,7 @@ Paradigm::Paradigm(const Paradigm& other)
         array[i] = other.array[i];
 }
 
-Paradigm::Paradigm(ifstream& ifs)
+void Paradigm::load(ifstream& ifs)
 {
     ifs>>size;
     array = new int[size * 3];
@@ -71,6 +71,8 @@ bool Paradigm::operator==(const Paradigm& other) const
 void Paradigm::build(vector<strPair>& lines, vector<string>& prefixes, 
                      vector<string>& suffixes, vector<string>& tags)
 {
+    size = lines.size();
+    array = new int[size * 3];
     string stem = lines.front().first;
     string temp;
     size_t pos;

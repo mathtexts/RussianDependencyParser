@@ -83,7 +83,7 @@ int main(int argc, char **argv)
             free(line);
             line = NULL;
             int index = -1;
-            Paradigm cur(lines.size());
+            Paradigm cur;
             cur.build(lines, prefixes, suffixes, tags);
             for(vector<Paradigm>::iterator i = paradigms.begin(); 
                     i != paradigms.end(); i++)

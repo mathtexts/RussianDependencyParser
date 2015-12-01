@@ -9,56 +9,67 @@
 #include <QHash>
 #include <QDebug>
 #include <stdio.h>
+#include <fstream>
+#include <string>
+
+using namespace std;
 
 QTextStream err(stdout);
 
-Model::Model(const char *mapfile, const char *wordsfile, const char *tagsfile, 
-        const char *endsfile) 
+Model::Model(const char *dictdir) 
 {
     countTagsPair.clear();
-    words.load(wordsfile);
-    tags.load(tagsfile);
-    ends.load(endsfile);
 
-    wordsMap = new Map[words.size()];
-    endsMap = new Map[ends.size()];
+    string dir = dictdir;
+    string path = dir + "/words.dawg";
+    ifstream ifs(path);
+    words.Read(&ifs);
+    ifs.close();
 
-    FILE *file = fopen(mapfile, "r");
-    if(file == NULL){
-        fprintf(stderr, "ERROR: map file not found\n");
-    }
+    path = dir + "/ends.dawg";
+    ifs.open(path);
+    ends.Read(&ifs);
+    ifs.close();
 
-    for(uint i = 0; i < words.size(); i++){
-        uchar temp;
-        fread(&temp, 1, 1, file);
-        wordsMap[i].size = temp * 2;
-        if(temp == 1){
-            fread(&wordsMap[i].u.singleMap.first, sizeof(uint), 1, file);
-            fread(&wordsMap[i].u.singleMap.second, sizeof(uint), 1, file);
-        }else{
-            wordsMap[i].u.multiMap = new uint[wordsMap[i].size];
-            for(uchar j = 0; j < wordsMap[i].size; j += 2){
-                fread(wordsMap[i].u.multiMap + j, sizeof(uint), 1, file);
-                fread(wordsMap[i].u.multiMap + j + 1, sizeof(uint), 1, file);
-            }
-        }
+    int temp = 0;
+    string str;
+    path = dir + "/prefixes";
+    ifs.open(path);
+    ifs>>temp;
+    prefixes = new char*[temp];
+    for(int i = 0; i < temp; i++){
+        ifs>>str;
+        prefixes[i] = str.c_str();
     }
-    for(uint i = 0; i < ends.size(); i++){
-        uchar temp;
-        fread(&temp, 1, 1, file);
-        endsMap[i].size = temp * 2;
-        if(temp == 1){
-            fread(&endsMap[i].u.singleMap.first, sizeof(uint), 1, file);
-            fread(&endsMap[i].u.singleMap.second, sizeof(uint), 1, file);
-        }else{
-            endsMap[i].u.multiMap = new uint[endsMap[i].size];
-            for(uchar j = 0; j < endsMap[i].size; j += 2){
-                fread(endsMap[i].u.multiMap + j, sizeof(uint), 1, file);
-                fread(endsMap[i].u.multiMap + j + 1, sizeof(uint), 1, file);
-            }
-        }
+    ifs.close();
+
+    path = dir + "/suffixes";
+    ifs.open(path);
+    ifs>>temp;
+    suffixes = new char*[temp];
+    for(int i = 0; i < temp; i++){
+        ifs>>str;
+        suffixes[i] = str.c_str();
     }
-    fclose(file);
+    ifs.close();
+
+    path = dir + "/tags";
+    ifs.open(path);
+    ifs>>temp;
+    tags = new char*[temp];
+    for(int i = 0; i < temp; i++){
+        ifs>>str;
+        tags[i] = str.c_str();
+    }
+    ifs.close();
+
+    path = dir + "/paradigms";
+    ifs.open(path);
+    ifs>>temp;
+    paradigms = new Paradigm[temp];
+    for(int i = 0; i < temp; i++)
+        paradigms[i].load(ifs);
+    ifs.close();
 }
 
 bool
@@ -248,35 +259,8 @@ Model::getTags(const QString& word, QList<ulong>& probs) {
 QList<StringPair> Model::getNFandTags(const QString& key) const
 {
     QByteArray temp = key.toUtf8();
-    marisa::Agent agent;
-    agent.set_query(temp.data());
+    char *ckey = temp.data();
     QList<StringPair> res;
-    if(words.lookup(agent)){
-        uint id = agent.key().id();
-        if(wordsMap[id].size > 2){
-            for(uchar i = 0; i < wordsMap[id].size; i += 2){
-                marisa::Agent aNormalForm;
-                aNormalForm.set_query(wordsMap[id].u.multiMap[i]);
-                words.reverse_lookup(aNormalForm);
-                QString nf = QString::fromUtf8(aNormalForm.key().ptr(), aNormalForm.key().length());
-                marisa::Agent aTags;
-                aTags.set_query(wordsMap[id].u.multiMap[i + 1]);
-                tags.reverse_lookup(aTags);
-                QString t = QString::fromUtf8(aTags.key().ptr(), aTags.key().length());
-                res.append(StringPair(nf, t));
-            }
-        }else{
-            marisa::Agent aNormalForm;
-            aNormalForm.set_query(wordsMap[id].u.singleMap.first);
-            words.reverse_lookup(aNormalForm);
-            QString nf = QString::fromUtf8(aNormalForm.key().ptr(), aNormalForm.key().length());
-            marisa::Agent aTags;
-            aTags.set_query(wordsMap[id].u.singleMap.second);
-            tags.reverse_lookup(aTags);
-            QString t = QString::fromUtf8(aTags.key().ptr(), aTags.key().length());
-            res.append(StringPair(nf, t));
-        }
-    }
     return res;
 }
 

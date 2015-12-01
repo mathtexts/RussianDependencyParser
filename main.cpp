@@ -121,7 +121,7 @@ main(int argc, char* argv[]) {
             printHelp();
             return 0;
         }
-        Model m("map.bin", "words.trie", "tags.trie", "ends.trie");
+        Model m("dict");
         m.train(argv[2], out);
         m.save(argv[3], out);
         return 0;
@@ -130,7 +130,7 @@ main(int argc, char* argv[]) {
             printHelp();
             return 0;
         }
-        Model m("map.bin", "words.trie", "tags.trie", "ends.trie");
+        Model m("dict");
         m.load(argv[4], out);
         if (!printMorph(argv[2], argv[3], m, out)) return -1;
     } else if (QString(argv[1]) == "--synttrain") {
@@ -138,7 +138,7 @@ main(int argc, char* argv[]) {
             printHelp();
             return 0;
         }
-        Model m("map.bin", "words.trie", "tags.trie", "ends.trie");
+        Model m("dict");
         m.load(argv[3], out);
         if (!printMorph(argv[2], "tmpFile", m, out)) return -1;
         QProcess turboParser;
@@ -153,7 +153,7 @@ main(int argc, char* argv[]) {
             return 0;
         }
         out << "Loading model" << endl;
-        Model m("map.bin", "words.trie", "tags.trie", "ends.trie");
+        Model m("dict");
         m.load(argv[3], out);
         out << "Generating tmp file" << endl;
         if (!printMorph(argv[2], "tmpFile", m, out)) return -1;
@@ -169,7 +169,4 @@ main(int argc, char* argv[]) {
         printHelp();
     }
     return 0;
-
-    /*
-    */
 }

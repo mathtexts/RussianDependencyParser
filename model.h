@@ -5,29 +5,16 @@
 #include <QHash>
 #include <QtGlobal>
 #include <QVector>
-#include "marisa.h"
+#include "paradigm.h"
+#include <dawgdic/dictionary.h>
 
 typedef QPair<QString, QString> StringPair;
 typedef unsigned char uchar;
 typedef unsigned int uint;
 
-struct Map{
-    uchar size;
-    /* this union needed to prevent internal fragmentation
-     * without it there will be too many arrays of size 2 (uint multiMap[2])
-     * therefore was added singleMap for this situation */
-    union {
-        uint *multiMap;
-        struct {
-            uint first;
-            uint second;
-        } singleMap;
-    } u;
-};
-
 class Model {
     public:
-        Model(const char *mapfile, const char *wordsfile, const char *tagsfile, const char *endsfile);
+        Model(const char *dictdir);
         virtual ~Model();
         bool train(const QString &filename, QTextStream &out);
         double test(const QString &filename, QTextStream &out);
@@ -41,12 +28,12 @@ class Model {
         QHash<StringPair, ulong> countTagsPair;
         ulong countWords;
 
-        marisa::Trie words;
-        marisa::Trie tags;
-        marisa::Trie ends;
-
-        Map *wordsMap;
-        Map *endsMap;
+        Paradigm *paradigms;
+        char **prefixes;
+        char **suffixes;
+        char **tags;
+        dawgdic::Dictionary words;
+        dawgdic::Dictionary ends;
 
         QList<StringPair> getNFandTags(const QString& key) const;
         QVector<QPair<QString, uint> > getTagsAndCount(const QString& key) const;

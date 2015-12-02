@@ -14,7 +14,7 @@ set(QT_DONT_USE_QTGUI false)
 include (${QT_USE_FILE})
 
 add_executable (gendict ${SOURCES_GENDICT})
-target_link_libraries (gendict)
+target_link_libraries (gendict marisa)
 
 add_executable (main ${SOURCES_MAIN})
-target_link_libraries (main ${QT_LIBRARIES})
+target_link_libraries (main ${QT_LIBRARIES} marisa)

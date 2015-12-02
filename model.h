@@ -6,7 +6,10 @@
 #include <QtGlobal>
 #include <QVector>
 #include "paradigm.h"
-#include <dawgdic/dictionary.h>
+#include <marisa.h>
+#include <string>
+
+using namespace std;
 
 typedef QPair<QString, QString> StringPair;
 typedef unsigned char uchar;
@@ -29,11 +32,11 @@ class Model {
         ulong countWords;
 
         Paradigm *paradigms;
-        char **prefixes;
-        char **suffixes;
-        char **tags;
-        dawgdic::Dictionary words;
-        dawgdic::Dictionary ends;
+        string *prefixes;
+        string *suffixes;
+        string *tags;
+        marisa::Trie words;
+        marisa::Trie ends;
 
         QList<StringPair> getNFandTags(const QString& key) const;
         QVector<QPair<QString, uint> > getTagsAndCount(const QString& key) const;

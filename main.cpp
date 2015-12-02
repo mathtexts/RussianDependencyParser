@@ -7,6 +7,7 @@
 #include <QProcess>
 #include <QDir>
 #include <QApplication>
+#include <iostream>
 
 bool
 printMorph(const QString& f1, const QString& f2, Model& m, QTextStream& out) {

@@ -8,7 +8,7 @@ make
 python correctDictionary.py ../openCorpora/dict.opcorpora.txt ../openCorpora/good_dict.opcorpora.txt
 
 # train the morphological parser AMorph14
-./genhashtable ../openCorpora/good_dict.opcorpora.txt map.bin words.trie tags.trie ends.trie
+./gendict ../openCorpora/good_dict.opcorpora.txt dict
 
 # train the syntactic parser ASynt14
 ./main --synttrain test1142.xml newmmodel.txt newsyntmodel.txt ../TurboParser-2.2.0/TurboParser

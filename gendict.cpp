@@ -9,8 +9,8 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <dawgdic/dawg-builder.h>
-#include <dawgdic/dictionary-builder.h>
+#include <marisa.h>
+#include <iostream>
 
 typedef unsigned int uint;
 typedef unsigned char uchar;
@@ -34,14 +34,11 @@ int main(int argc, char **argv)
     vector<string> suffixes;
     vector<string> tags;
     vector<strPair> lines;
-    vector<string> wordsV;
     map<string, int> endsM;
-    dawgdic::DawgBuilder words_builder;
-    dawgdic::Dawg words_dawg;
-    dawgdic::Dictionary words;
-    dawgdic::DawgBuilder ends_builder;
-    dawgdic::Dawg ends_dawg;
-    dawgdic::Dictionary ends;
+    marisa::Keyset wordsK;
+    marisa::Trie words;
+    marisa::Keyset endsK;
+    marisa::Trie ends;
 
     FILE *file = fopen(argv[1], "r");
 
@@ -98,7 +95,7 @@ int main(int argc, char **argv)
             for(vector<strPair>::iterator i = lines.begin(); i != lines.end(); i++){
                 string w = (*i).first + " " + to_string(index) + " " + 
                     to_string(i - lines.begin());
-                wordsV.push_back(w);
+                wordsK.push_back(w.c_str());
             }
             lines.clear();
             continue;
@@ -185,43 +182,20 @@ int main(int argc, char **argv)
     ofs.close();
     paradigms.clear();
 
-    cout<<"Sorting words vector..."<<endl;
-    sort(wordsV.begin(), wordsV.end());
-    cout<<"Writing words DAWG..."<<endl;
-    for(vector<string>::iterator i = wordsV.begin(); i != wordsV.end(); i++)
-        if(!words_builder.Insert((*i).c_str())){
-            cerr<<"Couldn`t add word \""<<*i<<"\" to dictionary"<<endl;
-            return 1;
-        }
-    words_builder.Finish(&words_dawg);
-    if(!dawgdic::DictionaryBuilder::Build(words_dawg, &words)){
-        cerr<<"Couldn`t create words dictionary"<<endl;
-        return 1;
-    }
-    wordsV.clear();
-    path = dir + "/words.dawg";
-    ofs.open(path);
-    words.Write(&ofs);
-    ofs.close();
+    cout<<"Writing words trie..."<<endl;
+    words.build(wordsK);
+    path = dir + "/words.trie";
+    words.save(path.c_str());
 
-    cout<<"Writing ends DAWG..."<<endl;
+    cout<<"Writing ends trie..."<<endl;
     for(map<string, int>::iterator i = endsM.begin(); i != endsM.end(); i++){
         string en = i->first + " " + to_string(i->second);
-        if(!ends_builder.Insert(en.c_str())){
-            cerr<<"Couldn`t add ending \""<<en<<"\" to dictionary"<<endl;
-            return 1;
-        }
+        endsK.push_back(en.c_str());
     }
-    ends_builder.Finish(&ends_dawg);
-    if(!dawgdic::DictionaryBuilder::Build(ends_dawg, &ends)){
-        cerr<<"Couldn`t create endings dictionary"<<endl;
-        return 1;
-    }
-    endsM.clear();
-    path = dir + "/ends.dawg";
+    ends.build(endsK);
+    path = dir + "/ends.trie";
     ofs.open(path);
-    ends.Write(&ofs);
-    ofs.close();
+    ends.save(path.c_str());
 
     cout<<"Done."<<endl;
     return 0;

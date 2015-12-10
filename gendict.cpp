@@ -11,6 +11,7 @@
 #include <sys/types.h>
 #include <dawgdic/dawg-builder.h>
 #include <dawgdic/dictionary-builder.h>
+#include <dawgdic/guide-builder.h>
 
 typedef unsigned int uint;
 typedef unsigned char uchar;
@@ -39,9 +40,11 @@ int main(int argc, char **argv)
     dawgdic::DawgBuilder words_builder;
     dawgdic::Dawg words_dawg;
     dawgdic::Dictionary words;
+    dawgdic::Guide words_guide;
     dawgdic::DawgBuilder ends_builder;
     dawgdic::Dawg ends_dawg;
     dawgdic::Dictionary ends;
+    dawgdic::Guide ends_guide;
 
     FILE *file = fopen(argv[1], "r");
 
@@ -187,7 +190,7 @@ int main(int argc, char **argv)
 
     cout<<"Sorting words vector..."<<endl;
     sort(wordsV.begin(), wordsV.end());
-    cout<<"Writing words DAWG..."<<endl;
+    cout<<"Building words DAWG..."<<endl;
     for(vector<string>::iterator i = wordsV.begin(); i != wordsV.end(); i++)
         if(!words_builder.Insert((*i).c_str())){
             cerr<<"Couldn`t add word \""<<*i<<"\" to dictionary"<<endl;
@@ -199,12 +202,24 @@ int main(int argc, char **argv)
         return 1;
     }
     wordsV.clear();
+    cout<<"Writing words DAWG..."<<endl;
     path = dir + "/words.dawg";
     ofs.open(path);
     words.Write(&ofs);
     ofs.close();
 
-    cout<<"Writing ends DAWG..."<<endl;
+    cout<<"Building words Guide..."<<endl;
+    if(!dawgdic::GuideBuilder::Build(words_dawg, words, &words_guide)){
+        cerr<<"Couldn`t create words guide"<<endl;
+        return 1;
+    }
+    cout<<"Writing words Guide..."<<endl;
+    path = dir + "/words.guide";
+    ofs.open(path);
+    words_guide.Write(&ofs);
+    ofs.close();
+
+    cout<<"Building ends DAWG..."<<endl;
     for(map<string, int>::iterator i = endsM.begin(); i != endsM.end(); i++){
         string en = i->first + " " + to_string(i->second);
         if(!ends_builder.Insert(en.c_str())){
@@ -218,9 +233,21 @@ int main(int argc, char **argv)
         return 1;
     }
     endsM.clear();
+    cout<<"Writing ends DAWG..."<<endl;
     path = dir + "/ends.dawg";
     ofs.open(path);
     ends.Write(&ofs);
+    ofs.close();
+
+    cout<<"Building ends Guide..."<<endl;
+    if(!dawgdic::GuideBuilder::Build(ends_dawg, ends, &ends_guide)){
+        cerr<<"Couldn`t create ends guide"<<endl;
+        return 1;
+    }
+    cout<<"Writing ends Guide..."<<endl;
+    path = dir + "/ends.guide";
+    ofs.open(path);
+    ends_guide.Write(&ofs);
     ofs.close();
 
     cout<<"Done."<<endl;

@@ -21,7 +21,9 @@ public:
     void build(vector<strPair>& lines, vector<string>& prefixes, 
                vector<string>& suffixes, vector<string>& tags);
     static string LCSubstr(const string& str1, const string& str2);
-    int operator[](int index) const { return array[index]; }
+    int getPrefix(int i) const { return array[i]; }
+    int getSuffix(int i) const { return array[size + i]; }
+    int getTags(int i) const { return array[size * 2 + i]; }
     void save(ofstream& ofs) const;
     void load(ifstream& ifs);
 };

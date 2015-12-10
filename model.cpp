@@ -31,36 +31,43 @@ Model::Model(const char *dictdir)
     ends.Read(&ifs);
     ifs.close();
 
+    path = dir + "/ends.guide";
+    ifs.open(path);
+    ends_guide.Read(&ifs);
+    ifs.close();
+
+    path = dir + "/words.guide";
+    ifs.open(path);
+    words_guide.Read(&ifs);
+    ifs.close();
+
     int temp = 0;
     string str;
     path = dir + "/prefixes";
     ifs.open(path);
     ifs>>temp;
-    prefixes = new char*[temp];
-    for(int i = 0; i < temp; i++){
-        ifs>>str;
-        prefixes[i] = str.c_str();
-    }
+    ifs.ignore(10, '\n');
+    prefixes = new string[temp];
+    for(int i = 0; i < temp; i++)
+        getline(ifs, prefixes[i]);
     ifs.close();
 
     path = dir + "/suffixes";
     ifs.open(path);
     ifs>>temp;
-    suffixes = new char*[temp];
-    for(int i = 0; i < temp; i++){
-        ifs>>str;
-        suffixes[i] = str.c_str();
-    }
+    ifs.ignore(10, '\n');
+    suffixes = new string[temp];
+    for(int i = 0; i < temp; i++)
+        getline(ifs, suffixes[i]);
     ifs.close();
 
     path = dir + "/tags";
     ifs.open(path);
     ifs>>temp;
-    tags = new char*[temp];
-    for(int i = 0; i < temp; i++){
-        ifs>>str;
-        tags[i] = str.c_str();
-    }
+    ifs.ignore(10, '\n');
+    tags = new string[temp];
+    for(int i = 0; i < temp; i++)
+        getline(ifs, tags[i]);
     ifs.close();
 
     path = dir + "/paradigms";
@@ -259,34 +266,65 @@ Model::getTags(const QString& word, QList<ulong>& probs) {
 QList<StringPair> Model::getNFandTags(const QString& key) const
 {
     QByteArray temp = key.toUtf8();
-    char *ckey = temp.data();
+    string normalForm = temp.data();
+    string hkey = normalForm + " ";
     QList<StringPair> res;
+    
+    dawgdic::BaseType index = words.root();
+    if(!words.Follow(hkey.c_str(), &index))
+        return res;
+    dawgdic::Completer completer(words, words_guide);
+    completer.Start(index, hkey.c_str());
+    while(completer.Next()){
+        normalForm = temp.data();
+        char *buf = new char[completer.length() + 1];
+        char *b = new char[completer.length() + 1];
+        int p;
+        int n;
+        strncpy(buf, completer.key(), completer.length());
+        buf[completer.length()] = '\0';
+        sscanf(buf, "%s %d %d", b, &p, &n);
+        delete [] b;
+        delete [] buf;
+        string suffix = suffixes[paradigms[p].getSuffix(n)];
+        normalForm = normalForm.substr(0, normalForm.size() - suffix.size());
+        suffix = suffixes[paradigms[p].getSuffix(0)];
+        normalForm += suffix;
+        string prefix = prefixes[paradigms[p].getPrefix(n)];
+        normalForm = normalForm.substr(prefix.size());
+        prefix = prefixes[paradigms[p].getPrefix(0)];
+        normalForm = prefix + normalForm;
+        QString nf = QString::fromUtf8(normalForm.c_str());
+        QString t = QString::fromUtf8(tags[paradigms[p].getTags(n)].c_str());
+        res.append(QPair<QString, QString>(nf, t));
+    }
     return res;
 }
 
 QVector<QPair<QString, uint> > Model::getTagsAndCount(const QString& key) const
 {
     QByteArray temp = key.toUtf8();
-    marisa::Agent agent;
-    agent.set_query(temp.data());
+    string hkey = temp.data();
+    hkey += " ";
     QVector<QPair<QString, uint> > res;
-    if(ends.lookup(agent)){
-        uint id = agent.key().id();
-        if(endsMap[id].size > 2){
-            for(uchar i = 0; i < endsMap[id].size; i += 2){
-                marisa::Agent aTags;
-                aTags.set_query(endsMap[id].u.multiMap[i]);
-                tags.reverse_lookup(aTags);
-                QString t = QString::fromUtf8(aTags.key().ptr(), aTags.key().length());
-                res.append(QPair<QString, uint>(t, endsMap[id].u.multiMap[i + 1]));
-            }
-        }else{
-            marisa::Agent aTags;
-            aTags.set_query(endsMap[id].u.singleMap.first);
-            tags.reverse_lookup(aTags);
-            QString t = QString::fromUtf8(aTags.key().ptr(), aTags.key().length());
-            res.append(QPair<QString, uint>(t, endsMap[id].u.singleMap.second));
-        }
+
+    dawgdic::BaseType index = ends.root();
+    if(!ends.Follow(hkey.c_str(), &index))
+        return res;
+    dawgdic::Completer completer(ends, ends_guide);
+    completer.Start(index, hkey.c_str());
+    while(!completer.Next()){
+        char *buf = new char[completer.length() + 1];
+        char *b = new char[completer.length() + 1];
+        int p;
+        uint n;
+        strncpy(buf, completer.key(), completer.length());
+        buf[completer.length()] = '\0';
+        sscanf(buf, "%s %d %u", b, &p, &n);
+        delete [] b;
+        delete [] buf;
+        QString t = QString::fromUtf8(tags[p].c_str());
+        res.append(QPair<QString, uint>(t, n));
     }
     return res;
 }
@@ -294,19 +332,8 @@ QVector<QPair<QString, uint> > Model::getTagsAndCount(const QString& key) const
 Model::~Model()
 {
     countTagsPair.clear();
-
-    for(uint i = 0; i < words.size(); i++)
-        if(wordsMap[i].size > 2)
-            delete [] wordsMap[i].u.multiMap;
-    delete [] wordsMap;
-
-    for(uint i = 0; i < ends.size(); i++)
-        if(endsMap[i].size > 2)
-            delete [] endsMap[i].u.multiMap;
-    delete [] endsMap;
-
-    words.clear();
-    tags.clear();
-    ends.clear();
-
+    delete [] paradigms;
+    delete [] tags;
+    delete [] prefixes;
+    delete [] suffixes;
 }

@@ -26,7 +26,7 @@ Installation
 
 (3) Download the plain text dictionary from opencorpora.org/dict.php, eg into the file /home/user/RussianDependencyParser/openCorpora/dict.opcorpora.txt.;
 
-(4) Download and install libmarisa, you can find sources and installation instructions on page http://marisa-trie.googlecode.com/svn/trunk/docs/readme.en.html
+(4) Download and install DAWG, you can find sources and installation instructions on page https://code.google.com/p/dawgdic/
 
 (5) Install cmake and qt
     $ sudo apt-get install cmake qt-sdk

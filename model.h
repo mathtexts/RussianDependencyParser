@@ -6,8 +6,8 @@
 #include <QtGlobal>
 #include <QVector>
 #include "paradigm.h"
-#include <dawgdic/dictionary.h>
-#include <dawgdic/completer.h>
+#include "dawgdic/dictionary.h"
+#include "dawgdic/completer.h"
 #include <string>
 
 using namespace std;

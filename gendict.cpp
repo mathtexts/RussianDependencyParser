@@ -9,9 +9,9 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <dawgdic/dawg-builder.h>
-#include <dawgdic/dictionary-builder.h>
-#include <dawgdic/guide-builder.h>
+#include "dawgdic/dawg-builder.h"
+#include "dawgdic/dictionary-builder.h"
+#include "dawgdic/guide-builder.h"
 
 typedef unsigned int uint;
 typedef unsigned char uchar;

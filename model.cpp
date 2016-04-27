@@ -139,12 +139,12 @@ Model::train(const QString& filename, QTextStream& out) {
     out.setCodec("UTF-8");
     while (!sfin.atEnd()) {
         QString line = sfin.readLine();
-        if (line == "----------") {
+        if (line.size() == 0 || line == "----------") {
             prevTag = "NONE";
             continue;
         }
 
-        QStringList words = line.split(" ");
+        QStringList words = line.split("\t");
         ++countWords;
         ++countTagsPair[StringPair(prevTag, words[2])];
         prevTag = words[2];

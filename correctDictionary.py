@@ -22,11 +22,15 @@ for line in open(sys.argv[1]):
             prev_block = block
             block = []
         elif block:
+            # merge infinitive with following forms to enable correct word normalization
+            if (block[-1].find('\tINFN,') > -1):
+                prev_block = prev_block[1:]
+                block[-1] = block[-1].rstrip()
             print >>out_file, ''.join(block)
-            block = []
             if prev_block:
                 print >>out_file, ''.join(prev_block)
                 prev_block = []
+            block = []
     elif len(line_parts) > 1 and line_parts[1].startswith('VERB,'):
         remember_block = True
     if in_block:
